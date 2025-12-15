@@ -18,25 +18,39 @@ const ResetPassword = () => {
   const { toast } = useToast();
 
   useEffect(() => {
-    // Check if we have a session (user clicked the email link)
-    const checkSession = async () => {
+    const handleSessionCheck = async () => {
+      // First check if there is a hash in the URL, which implies we are in a recovery flow
+      const hash = window.location.hash;
+      if (hash && hash.includes('type=recovery')) {
+        // We are likely fine, wait for Supabase to process the hash
+        return;
+      }
+
+      // Check current session
       const { data: { session } } = await supabase.auth.getSession();
+
       if (!session) {
-        toast({
-          title: 'Invalid Link',
-          description: 'This password reset link is invalid or has expired.',
-          variant: 'destructive',
-        });
-        navigate('/admin/login');
+        // If no session and no hash, check one more time after a short delay
+        // as the auth state change might be pending
+        setTimeout(async () => {
+          const { data: { session: delayedSession } } = await supabase.auth.getSession();
+          if (!delayedSession) {
+            toast({
+              title: 'Invalid Link',
+              description: 'This password reset link is invalid or has expired.',
+              variant: 'destructive',
+            });
+            navigate('/admin/login');
+          }
+        }, 1000);
       }
     };
-    
-    checkSession();
 
-    // Listen for auth state changes (in case link processing happens slightly later)
+    handleSessionCheck();
+
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (event === 'PASSWORD_RECOVERY') {
-         // This event is fired when the user clicks the recovery link
+        // This event is fired when the user clicks the recovery link, handled automatically by Supabase client
       }
     });
 
@@ -84,7 +98,7 @@ const ResetPassword = () => {
         title: 'Success',
         description: 'Your password has been updated successfully. Please login with your new password.',
       });
-      
+
       // Sign out to force re-login with new password just to be clean, or redirect to dashboard.
       // Usually better to redirect to login to confirm they know the new password.
       await supabase.auth.signOut();

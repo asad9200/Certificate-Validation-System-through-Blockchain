@@ -14,7 +14,7 @@ import SuperAdminLogin from "./pages/SuperAdminLogin";
 import SuperAdminDashboard from "./pages/SuperAdminDashboard";
 import NotFound from "./pages/NotFound";
 import ResetPassword from "./pages/ResetPassword";
-import ResetPassword from "./pages/ResetPassword";
+
 
 const queryClient = new QueryClient();
 
@@ -41,7 +41,7 @@ const App = () => (
             {/* Super Admin Routes */}
             <Route path="/super-admin/login" element={<SuperAdminLogin />} />
             <Route path="/super-admin/dashboard" element={<SuperAdminDashboard />} />
-            
+
             {/* Password Reset Route */}
             <Route path="/reset-password" element={<ResetPassword />} />
 
